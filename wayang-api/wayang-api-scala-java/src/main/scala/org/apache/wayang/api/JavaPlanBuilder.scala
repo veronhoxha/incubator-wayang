@@ -25,11 +25,12 @@ import java.util.{Collection => JavaCollection}
 import org.apache.commons.lang3.Validate
 import org.apache.wayang.api.util.DataQuantaBuilderCache
 import org.apache.wayang.basic.data.Record
-import org.apache.wayang.basic.operators.{TableSource, TextFileSource, KafkaTopicSource}
+import org.apache.wayang.basic.operators.{TableSource, TextFileSource, ParquetSource, KafkaTopicSource}
 import org.apache.wayang.commons.util.profiledb.model.Experiment
 import org.apache.wayang.core.api.WayangContext
 import org.apache.wayang.core.plan.wayangplan._
 import org.apache.wayang.core.types.DataSetType
+import org.apache.avro.generic.GenericRecord
 
 import scala.reflect.ClassTag
 
@@ -61,6 +62,16 @@ class JavaPlanBuilder(wayangCtx: WayangContext, jobName: String) {
     */
   def readTextFile(url: String): UnarySourceDataQuantaBuilder[UnarySourceDataQuantaBuilder[_, String], String] =
   createSourceBuilder(new TextFileSource(url))(ClassTag(classOf[String]))
+
+
+    /**
+    * Read a Parquet file and provide it as a dataset of [[GenericRecord]]s.
+    *
+    * @param url the URL of the Parquet file
+    * @return [[DataQuantaBuilder]] for the file
+    */
+  def readParquetFile(url: String): UnarySourceDataQuantaBuilder[UnarySourceDataQuantaBuilder[_, GenericRecord], GenericRecord] =
+    createSourceBuilder(new ParquetSource(url))(ClassTag(classOf[GenericRecord]))
 
   /**
    * Read a textmessages from a Kafka topic and provide it as a dataset of [[String]]s, one per message.
