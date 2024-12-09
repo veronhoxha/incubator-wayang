@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Mapping from ParquetSource to JavaParquetSource.
+ * Mapping from {@link ParquetSource} to {@link JavaParquetSource}.
  */
 public class ParquetSourceMapping implements Mapping {
 
@@ -42,12 +42,11 @@ public class ParquetSourceMapping implements Mapping {
     }
 
     private SubplanPattern createSubplanPattern() {
-        final OperatorPattern operatorPattern = new OperatorPattern(
-                "parquetSource", new org.apache.wayang.basic.operators.ParquetSource((String) null), false
+        final OperatorPattern<ParquetSource> operatorPattern = new OperatorPattern<>(
+                "parquetSource", new ParquetSource((String) null), false
         );
         return SubplanPattern.createSingleton(operatorPattern);
     }
-
 
     private ReplacementSubplanFactory createReplacementSubplanFactory() {
         return new ReplacementSubplanFactory.OfSingleOperators<ParquetSource>(
