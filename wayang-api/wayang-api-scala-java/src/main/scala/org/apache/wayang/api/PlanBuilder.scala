@@ -22,6 +22,7 @@ package org.apache.wayang.api
  * labels: unitary-test,todo
  */
 import org.apache.commons.lang3.Validate
+import org.apache.avro.Schema
 import org.apache.wayang.api
 import org.apache.wayang.basic.data.Record
 import org.apache.wayang.basic.operators.{CollectionSource, ObjectFileSource, ParquetSource, TableSource, TextFileSource}
@@ -124,12 +125,27 @@ class PlanBuilder(private[api] val wayangContext: WayangContext, private var job
   def readTextFile(url: String): DataQuanta[String] = load(new TextFileSource(url))
 
   /**
-    * Read a Parquet file and provide it as a dataset of [[GenericRecord]]s.
+    * Reads a Parquet file from a specified URL and returns the content as a dataset of GenericRecords.
     *
-    * @param url the URL of the Parquet file
-    * @return [[DataQuanta]] representing the file
+    * @param url the URL of the Parquet file to be read
+    * @return [[DataQuanta]] representing the Parquet file as GenericRecords
     */
-  def readParquetFile(url: String): DataQuanta[GenericRecord] = load(new ParquetSource(url))
+  def readParquetFile(url: String): DataQuanta[GenericRecord] = {
+      implicit val ct: ClassTag[GenericRecord] = ClassTag(classOf[GenericRecord])
+      load(new ParquetSource(url))
+  }
+
+  /**
+    * Reads a Parquet file from a specified URL using the provided schema and returns the content as a dataset of GenericRecords.
+    *
+    * @param url the URL of the Parquet file to be read
+    * @param schema the schema to use when reading the Parquet file
+    * @return [[DataQuanta]] representing the Parquet file as GenericRecords, parsed according to the provided schema
+    */
+  def readParquetFile(url: String, schema: Schema): DataQuanta[GenericRecord] = {
+      implicit val ct: ClassTag[GenericRecord] = ClassTag(classOf[GenericRecord])
+      load(new ParquetSource(url, schema))
+  }
 
   /**
     * Read a text file and provide it as a dataset of [[String]]s, one per line.
