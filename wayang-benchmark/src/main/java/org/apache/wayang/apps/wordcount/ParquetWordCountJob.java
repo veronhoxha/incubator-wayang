@@ -67,7 +67,6 @@ public class ParquetWordCountJob {
 
         // tried to implement the pushdown projection but it didn't work as expected so just leaving it here as a comment
 
-
         // yelp review record schema with label as optional
         // Schema partialSchema = new Schema.Parser().parse(
         //     "{\n" +
@@ -178,8 +177,8 @@ public class ParquetWordCountJob {
             long end = System.currentTimeMillis();
             parquetFullTimes[i] = (end - start);
 
-            System.out.printf("Found %d words from Parquet Full run %d\n", result.size(), i+1);
-            System.out.println("Parquet Full Schema Run " + (i + 1) + ": " + parquetFullTimes[i] + " ms");
+            System.out.printf("Found %d words from Parquet (full Schema) run %d\n", result.size(), i+1);
+            System.out.println("Parquet (full Schema) Run " + (i + 1) + ": " + parquetFullTimes[i] + " ms");
             
             // uncomment the following line to print out the words
             // result.forEach(wc -> System.out.printf("%dx %s\n", wc.field1, wc.field0));
@@ -225,8 +224,8 @@ public class ParquetWordCountJob {
         //     long end = System.currentTimeMillis();
         //     parquetPartialTimes[i] = (end - start);
 
-        //     System.out.printf("Found %d words from Parquet Partial run %d\n", result.size(), i+1);
-        //     System.out.println("Parquet Partial Schema Run " + (i + 1) + ": " + parquetPartialTimes[i] + " ms");
+        //     System.out.printf("Found %d words from Parquet (partial schema) run %d\n", result.size(), i+1);
+        //     System.out.println("Parquet (partial schema) Run " + (i + 1) + ": " + parquetPartialTimes[i] + " ms");
             
         //     // uncomment the following line to print out the words
         //     // result.forEach(wc -> System.out.printf("%dx %s\n", wc.field1, wc.field0));
@@ -236,9 +235,9 @@ public class ParquetWordCountJob {
 
         // average times over the measured runs
         System.out.println("\n=== Averages (based on 5 measured runs) ===");
-        System.out.println("Average CSV Runtime Time: " + avgCsvTime + " ms");
-        System.out.println("Average Parquet (full schema) Runtime Time: " + avgParquetFullTime + " ms");
-        // System.out.println("Average Parquet (partial schema) Processing Time: " + avgParquetPartialTime + " ms");
+        System.out.println("Average CSV Runtime: " + avgCsvTime + " ms");
+        System.out.println("Average Parquet (full schema) Runtime: " + avgParquetFullTime + " ms");
+        // System.out.println("Average Parquet (partial schema) Runtime: " + avgParquetPartialTime + " ms");
         System.out.println();
         // System.out.println("New experiment starting...");
         System.out.println();
