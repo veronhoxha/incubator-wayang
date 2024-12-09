@@ -21,6 +21,7 @@ package org.apache.wayang.basic.operators;
 
 import org.apache.wayang.core.plan.wayangplan.UnarySource;
 import org.apache.wayang.core.types.DataSetType;
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 
 /**
@@ -29,29 +30,46 @@ import org.apache.avro.generic.GenericRecord;
 public class ParquetSource extends UnarySource<GenericRecord> {
 
     private final String inputPath;
+    private final Schema projectionSchema;
 
     /**
-     * Creates a new instance.
+     * Constructor without projection schema.
      *
      * @param inputPath the path to the Parquet file
      */
     public ParquetSource(String inputPath) {
+        this(inputPath, null);
+    }
+
+    /**
+     * Constructor with projection schema.
+     *
+     * @param inputPath the path to the Parquet file
+     * @param projectionSchema the schema specifying the columns to read
+     */
+    public ParquetSource(String inputPath, Schema projectionSchema) {
         super(DataSetType.createDefault(GenericRecord.class));
         this.inputPath = inputPath;
+        this.projectionSchema = projectionSchema;
     }
 
     /**
      * Copy constructor.
      *
-     * @param that the instance to copy
+     * @param that that should be copied
      */
     public ParquetSource(ParquetSource that) {
         super(that);
         this.inputPath = that.inputPath;
+        this.projectionSchema = that.projectionSchema;
     }
 
     public String getInputPath() {
         return inputPath;
+    }
+
+    public Schema getProjectionSchema() {
+        return projectionSchema;
     }
 
     @Override
