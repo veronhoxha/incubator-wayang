@@ -31,6 +31,7 @@ import org.apache.wayang.core.api.WayangContext
 import org.apache.wayang.core.plan.wayangplan._
 import org.apache.wayang.core.types.DataSetType
 import org.apache.avro.generic.GenericRecord
+import org.apache.avro.Schema
 
 import scala.reflect.ClassTag
 
@@ -63,15 +64,25 @@ class JavaPlanBuilder(wayangCtx: WayangContext, jobName: String) {
   def readTextFile(url: String): UnarySourceDataQuantaBuilder[UnarySourceDataQuantaBuilder[_, String], String] =
   createSourceBuilder(new TextFileSource(url))(ClassTag(classOf[String]))
 
-
-    /**
-    * Read a Parquet file and provide it as a dataset of [[GenericRecord]]s.
+  /**
+    * Reads a Parquet file from the specified URL and returns a builder for creating a dataset of GenericRecords.
     *
-    * @param url the URL of the Parquet file
-    * @return [[DataQuantaBuilder]] for the file
+    * @param url the URL of the Parquet file to be read
+    * @return a [[DataQuantaBuilder]] configured to read GenericRecords from the Parquet file
     */
   def readParquetFile(url: String): UnarySourceDataQuantaBuilder[UnarySourceDataQuantaBuilder[_, GenericRecord], GenericRecord] =
     createSourceBuilder(new ParquetSource(url))(ClassTag(classOf[GenericRecord]))
+
+  /**
+    * Reads a Parquet file from the specified URL using the provided schema and returns a builder for creating a dataset of GenericRecords.
+    *
+    * @param url the URL of the Parquet file to be read
+    * @param schema the schema to use when reading the Parquet file
+    * @return a [[DataQuantaBuilder]] configured to read GenericRecords from the Parquet file according to the provided schema
+    */
+  def readParquetFile(url: String, schema: Schema): UnarySourceDataQuantaBuilder[UnarySourceDataQuantaBuilder[_, GenericRecord], GenericRecord] =
+    createSourceBuilder(new ParquetSource(url, schema))(ClassTag(classOf[GenericRecord]))
+
 
   /**
    * Read a textmessages from a Kafka topic and provide it as a dataset of [[String]]s, one per message.
