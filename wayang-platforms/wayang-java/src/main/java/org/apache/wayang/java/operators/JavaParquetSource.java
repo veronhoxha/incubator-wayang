@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+
 package org.apache.wayang.java.operators;
 
 import org.apache.wayang.basic.operators.ParquetSource;
@@ -26,14 +27,14 @@ import org.apache.wayang.core.platform.lineage.ExecutionLineageNode;
 import org.apache.wayang.java.channels.StreamChannel;
 import org.apache.wayang.java.execution.JavaExecutor;
 import org.apache.wayang.core.util.Tuple;
-import org.apache.wayang.java.platform.JavaPlatform;
 
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
-// import org.apache.avro.mapred.FsInput;
+import org.apache.parquet.avro.AvroParquetReader;
+import org.apache.parquet.avro.AvroReadSupport;
+import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.avro.AvroParquetReader;
-import org.apache.parquet.hadoop.ParquetReader;
 
 import java.io.IOException;
 import java.util.*;
@@ -41,10 +42,15 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 
+
 public class JavaParquetSource extends ParquetSource implements JavaExecutionOperator {
 
     public JavaParquetSource(String inputPath) {
         super(inputPath);
+    }
+
+    public JavaParquetSource(String inputPath, Schema projectionSchema) {
+        super(inputPath, projectionSchema);
     }
 
     public JavaParquetSource(ParquetSource that) {
@@ -64,55 +70,29 @@ public class JavaParquetSource extends ParquetSource implements JavaExecutionOpe
         StreamChannel.Instance output = (StreamChannel.Instance) outputs[0];
 
         String inputPath = this.getInputPath();
+        Schema projectionSchema = this.getProjectionSchema();
 
         Configuration conf = new Configuration();
+        if (projectionSchema != null) {
+            conf.set("parquet.avro.read.schema", projectionSchema.toString());
+        }
         Path parquetFilePath = new Path(inputPath);
 
-        ParquetReader<GenericRecord> reader;
-        try {
-            reader = AvroParquetReader.<GenericRecord>builder(parquetFilePath)
-                    .withConf(conf)
-                    .build();
+        List<GenericRecord> records = new ArrayList<>();
+        try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(parquetFilePath)
+                .withConf(conf)
+                .build()) {
+
+            GenericRecord record;
+            while ((record = reader.read()) != null) {
+                records.add(record);
+            }
+
         } catch (IOException e) {
-            throw new RuntimeException("Failed to create ParquetReader for: " + inputPath, e);
+            throw new RuntimeException("Failed to read Parquet file: " + inputPath, e);
         }
 
-        Iterable<GenericRecord> iterable = () -> new Iterator<GenericRecord>() {
-            private GenericRecord nextRecord = fetchNext();
-
-            private GenericRecord fetchNext() {
-                try {
-                    return reader.read();
-                } catch (IOException e) {
-                    throw new RuntimeException("Error reading Parquet file.", e);
-                }
-            }
-
-            @Override
-            public boolean hasNext() {
-                return nextRecord != null;
-            }
-
-            @Override
-            public GenericRecord next() {
-                if (nextRecord == null) {
-                    throw new NoSuchElementException();
-                }
-                GenericRecord current = nextRecord;
-                nextRecord = fetchNext();
-                return current;
-            }
-        };
-
-        Stream<GenericRecord> recordStream = StreamSupport.stream(iterable.spliterator(), false)
-                .onClose(() -> {
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        throw new RuntimeException("Error closing ParquetReader.", e);
-                    }
-                });
-
+        Stream<GenericRecord> recordStream = records.stream();
         output.accept(recordStream);
 
         ExecutionLineageNode execNode = new ExecutionLineageNode(operatorContext);
@@ -122,7 +102,7 @@ public class JavaParquetSource extends ParquetSource implements JavaExecutionOpe
 
     @Override
     public JavaParquetSource copy() {
-        return new JavaParquetSource(this.getInputPath());
+        return new JavaParquetSource(this.getInputPath(), this.getProjectionSchema());
     }
 
     @Override
